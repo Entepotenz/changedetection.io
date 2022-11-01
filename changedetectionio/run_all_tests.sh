@@ -14,7 +14,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 find tests/test_*py -type f|while read test_name
 do
   echo "TEST RUNNING $test_name"
-  pytest $test_name
+  poetry run pytest $test_name
 done
 
 echo "RUNNING WITH BASE_URL SET"
@@ -22,7 +22,7 @@ echo "RUNNING WITH BASE_URL SET"
 # Now re-run some tests with BASE_URL enabled
 # Re #65 - Ability to include a link back to the installation, in the notification.
 export BASE_URL="https://really-unique-domain.io"
-pytest tests/test_notification.py
+poetry run pytest tests/test_notification.py
 
 # Now for the selenium and playwright/browserless fetchers
 # Note - this is not UI functional tests - just checking that each one can fetch the content
@@ -32,8 +32,8 @@ docker run -d --name $$-test_selenium  -p 4444:4444 --rm --shm-size="2g"  seleni
 # takes a while to spin up
 sleep 5
 export WEBDRIVER_URL=http://localhost:4444/wd/hub
-pytest tests/fetchers/test_content.py
-pytest tests/test_errorhandling.py
+poetry run pytest tests/fetchers/test_content.py
+poetry run pytest tests/test_errorhandling.py
 unset WEBDRIVER_URL
 docker kill $$-test_selenium
 
@@ -42,9 +42,9 @@ docker run -d --name $$-test_browserless -e "DEFAULT_LAUNCH_ARGS=[\"--window-siz
 # takes a while to spin up
 sleep 5
 export PLAYWRIGHT_DRIVER_URL=ws://127.0.0.1:3000
-pytest tests/fetchers/test_content.py
-pytest tests/test_errorhandling.py
-pytest tests/visualselector/test_fetch_data.py
+poetry run pytest tests/fetchers/test_content.py
+poetry run pytest tests/test_errorhandling.py
+poetry run pytest tests/visualselector/test_fetch_data.py
 
 unset PLAYWRIGHT_DRIVER_URL
 docker kill $$-test_browserless
@@ -58,7 +58,7 @@ docker run -d --name $$-squid-two --rm -v `pwd`/tests/proxy_list/squid.conf:/etc
 # So, basic HTTP as env var test
 export HTTP_PROXY=http://localhost:3128
 export HTTPS_PROXY=http://localhost:3128
-pytest tests/proxy_list/test_proxy.py
+poetry run pytest tests/proxy_list/test_proxy.py
 docker logs $$-squid-one 2>/dev/null|grep one.changedetection.io
 if [ $? -ne 0 ]
 then
@@ -71,7 +71,7 @@ unset HTTPS_PROXY
 # 2nd test actually choose the preferred proxy from proxies.json
 cp tests/proxy_list/proxies.json-example ./test-datastore/proxies.json
 # Makes a watch use a preferred proxy
-pytest tests/proxy_list/test_multiple_proxy.py
+poetry run pytest tests/proxy_list/test_multiple_proxy.py
 
 # Should be a request in the default "first" squid
 docker logs $$-squid-one 2>/dev/null|grep chosen.changedetection.io
