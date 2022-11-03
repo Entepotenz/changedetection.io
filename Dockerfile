@@ -1,8 +1,14 @@
+FROM python:3.8-alpine as builder-poetry
+RUN apk update && apk add poetry
+
+COPY pyproject.toml poetry.lock /
+RUN poetry export -f requirements.txt --output /requirements.txt
+
 # pip dependencies install stage
 FROM python:3.8-slim as builder
 
 # rustc compiler would be needed on ARM type devices but theres an issue with some deps not building..
-#ARG CRYPTOGRAPHY_DONT_BUILD_RUST=1
+ARG CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
@@ -12,24 +18,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     libxslt-dev \
     make \
-    zlib1g-dev \
-    libstdc++6 \
-    build-essential \
-    curl \
-    cargo
-
-#RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
-#ENV PATH="/root/.cargo/bin:${PATH}"
+    zlib1g-dev
 
 RUN mkdir /install
 WORKDIR /install
 
-COPY poetry.lock pyproject.toml /
-
 RUN pip install --upgrade pip
-RUN pip install poetry
-RUN poetry export --without dev -f requirements.txt --output /requirements.txt
-RUN pip install --target=/dependencies -r /requirements.txt
+COPY --from=builder-poetry /requirements.txt /requirements.txt
+# "--no-deps" workaround for fixing "cffi" "--require-hashes" problem: https://github.com/pypa/pip/issues/9644
+RUN pip install --no-deps --target=/dependencies -r /requirements.txt
 
 
 # Final image stage
@@ -37,7 +34,7 @@ FROM python:3.8-slim
 
 # Actual packages needed at runtime, usually due to the notification (apprise) backend
 # rustc compiler would be needed on ARM type devices but theres an issue with some deps not building..
-#ARG CRYPTOGRAPHY_DONT_BUILD_RUST=1
+ARG CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 # Re #93, #73, excluding rustc (adds another 430Mb~)
 RUN apt-get update && apt-get install -y --no-install-recommends \
