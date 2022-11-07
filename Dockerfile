@@ -28,6 +28,11 @@ COPY --from=builder-poetry /requirements.txt /requirements.txt
 # "--no-deps" workaround for fixing "cffi" "--require-hashes" problem: https://github.com/pypa/pip/issues/9644
 RUN pip install --no-deps --target=/dependencies -r /requirements.txt
 
+# Playwright is an alternative to Selenium
+# Excluded this package from requirements.txt to prevent arm/v6 and arm/v7 builds from failing
+# https://github.com/dgtlmoon/changedetection.io/pull/1067 also musl/alpine (not supported)
+RUN pip install --target=/dependencies playwright~=1.26 \
+    || echo "WARN: Failed to install Playwright. The application can still run, but the Playwright option will be disabled."
 
 # Final image stage
 FROM python:3.8-slim
