@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "changedetection.io"
-version = "0.39.20.4"
+version = "0.39.21.1"
 description = "The best and simplest self-hosted free open source website change detection tracking, monitoring and notification service."
 authors = ["dgtlmoon <dgtlmoon@gmail.com>"]
 license = "Apache License 2.0"
@@ -62,9 +62,6 @@ jinja2-time = "^0.2.0"
 # https://github.com/dgtlmoon/changedetection.io/pull/1009
 jq = [
     { version = "~=1.3", python = ">=3.8", platform = 'linux' },
-]
-playwright = [
-    { version = "~=1.26", python = ">=3.8", markers = "platform_machine != 'armv6l' and platform_machine != 'armv7l'" },
 ]
 
 [tool.poetry.dev-dependencies]
